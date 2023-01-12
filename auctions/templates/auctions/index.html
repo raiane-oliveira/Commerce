@@ -1,0 +1,24 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Active Listings</h2>
+
+    {% for listing in listings %}
+        <div class="card" style="width: 18rem; margin-bottom: 20px;">
+            {% if listing.imageURL %}
+                <img class="card-img-top" src="{{ listing.imageURL }}" alt="Listing Image">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ listing.title }}</h5>
+                <p class="card-text">{{ listing.description }}</p>
+                <p class="card-text"><strong>Price:</strong> ${{ listing.startBid }}</p>
+                <a href="" class="btn btn-primary">Visit</a>
+            </div>
+        </div>
+    {% empty %}
+        <p class="lead">
+            No auction listings added yet.
+            <a href="{% url 'create_listing' %}">Click here to add</a>
+        </p>
+    {% endfor %}
+{% endblock %}
