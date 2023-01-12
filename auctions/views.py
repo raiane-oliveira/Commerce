@@ -83,16 +83,20 @@ def create_listing(request):
             imageURL = form.cleaned_data["imageURL"]
             category = form.cleaned_data["category"]
 
+            # Add bid to the Bids model
+            bid = Bids(bid=startBid)
+            bid.save()
+            
             # Add data to the auction Listings model
             newListing = AuctionListing(
                 title=title, 
                 description=description, 
-                startBid=startBid,
                 imageURL = imageURL,
+                bid=bid,
                 category=category
             )
             newListing.save()
-    
+
             return HttpResponseRedirect(reverse("index"))
 
         # Re-render the page with error messages
@@ -110,6 +114,12 @@ def listings(request, listing_id):
 
     # Gets auction listing id
     currentListing = AuctionListing.objects.get(id=listing_id)
+
+    # if request.user.is_authenticated:
+
+
     return render(request, "auctions/listing.html", {
         "listing": currentListing
     })
+
+

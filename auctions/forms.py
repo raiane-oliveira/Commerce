@@ -7,9 +7,6 @@ class FormNewListing(forms.Form):
         "class": "form-control",
     }))
 
-    # description = forms.CharField(label="Description:", widget=forms.TextInput(attrs={
-    #     "class": "form-control"
-    # }))
     description = forms.CharField(label="Description:", widget=forms.Textarea(attrs={
         "class": "form-control",
         "rows": 5,
@@ -29,6 +26,3 @@ class FormNewListing(forms.Form):
         "class": "form-control"
     }))
 
-
-class Bid(forms.Form):
-    bid = forms.CharField
