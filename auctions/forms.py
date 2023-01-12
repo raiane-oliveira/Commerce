@@ -1,6 +1,5 @@
 from django import forms
 
-
 class FormNewListing(forms.Form):
 
     # Required Fields
@@ -17,7 +16,7 @@ class FormNewListing(forms.Form):
         "cols": 30
     }))
     
-    bid = forms.CharField(label="Start Bid:", widget=forms.TextInput(attrs={
+    bid = forms.DecimalField(label="Start Bid:", widget=forms.TextInput(attrs={
         "placeholder": "$",
         "class": "form-control"
     }))
@@ -29,3 +28,7 @@ class FormNewListing(forms.Form):
     category = forms.CharField(label="Category:", required=False, widget=forms.TextInput(attrs={
         "class": "form-control"
     }))
+
+
+class Bid(forms.Form):
+    bid = forms.CharField

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import F
 
 
 class User(AbstractUser):
@@ -14,6 +15,9 @@ class AuctionListing(models.Model):
 
     def __str__(self):
         return f"{self.title}: {self.description}, {self.startBid}"
+
+    class Meta:
+        ordering = [F("id").desc()]
 
 
 class Bids(models.Model):
