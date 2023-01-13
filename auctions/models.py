@@ -6,32 +6,44 @@ from django.db.models import F
 class User(AbstractUser):
     pass
 
-class Bids(models.Model):
-    bid = models.DecimalField(max_digits=100, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.bid}"
 
 class AuctionListing(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
-    imageURL = models.URLField()
-    category = models.CharField(max_length=100)
-    bid = models.ForeignKey(Bids, on_delete=models.CASCADE, related_name="bids")
+    bid = models.DecimalField(max_digits=100, decimal_places=2)
+    imageURL = models.URLField(blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userListing")
+
+    active = models.BooleanField(default=True)
+    watchlist = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.title}: {self.description}, {self.bid}"
+        return f"{self.title} | {self.description} | {self.bid}"
 
     class Meta:
         ordering = [F("id").desc()]
 
 
-class WatchList(models.Model):
-    watchedAuctions = models.ForeignKey(AuctionListing, blank=True, related_name="watchedAuctions")
+class Bids(models.Model):
+    newBid = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
+    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="bids")
 
     def __str__(self):
-        return f"{self.watchedAuctions}"
+        return f"{self.newBid}"
+
+
+class Categories(models.Model):
+    category = models.CharField(max_length=100, blank=True)
+    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="category")
+
+    def __str__(self):
+        return f"{self.category}"
 
 
 class Comments(models.Model):
-    pass
+    comment = models.TextField(blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="users")
+    listing = models.ManyToManyField(AuctionListing, blank=True, related_name="comments")
+
+    def __str__(self):
+        return f"{self.comment}"

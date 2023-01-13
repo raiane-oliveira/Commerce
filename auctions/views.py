@@ -3,15 +3,20 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
 from .models import *
 from .forms import *
 
 
 def index(request):
+    user = User.objects.get(pk=request.user.id)
     listings = AuctionListing.objects.all()
+
+    # listings.delete()
     return render(request, "auctions/index.html", {
-        "listings": listings
+        "listings": listings,
+        "user": user,
     })
 
 
@@ -83,19 +88,27 @@ def create_listing(request):
             imageURL = form.cleaned_data["imageURL"]
             category = form.cleaned_data["category"]
 
-            # Add bid to the Bids model
-            bid = Bids(bid=startBid)
-            bid.save()
-            
-            # Add data to the auction Listings model
+            user = User.objects.get(pk=request.user.id)
+
+            # Add data to the auction Listing model
             newListing = AuctionListing(
                 title=title, 
                 description=description, 
                 imageURL = imageURL,
-                bid=bid,
-                category=category
+                bid=startBid,
+                user=user,
             )
             newListing.save()
+
+            # Add category
+            newCategory = Categories(category=category, listing=newListing)
+            newCategory.save()
+
+            # Add bid to the Bids model
+            bid = Bids(newBid=startBid, listing=newListing)
+            bid.save()
+
+            # newListing.active.add(newListing)
 
             return HttpResponseRedirect(reverse("index"))
 
@@ -108,18 +121,3 @@ def create_listing(request):
     return render(request, "auctions/createListing.html", {
         "form": FormNewListing()
     })
-
-
-def listings(request, listing_id):
-
-    # Gets auction listing id
-    currentListing = AuctionListing.objects.get(id=listing_id)
-
-    # if request.user.is_authenticated:
-
-
-    return render(request, "auctions/listing.html", {
-        "listing": currentListing
-    })
-
-
