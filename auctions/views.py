@@ -179,6 +179,34 @@ def closeAuction(request, listing_id):
         listing.save()
 
         return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
+    else:
+        return HttpResponseRedirect(reverse("index"))
+
+
+@login_required(login_url='login')
+def watchlist(request):
+
+    if request.method == "POST":
+
+        # Gets data from add form
+        listing_id = request.POST["listing_id"]
+        choiceUser = request.POST["watchlist"]
+
+        listing = AuctionListing.objects.get(id=listing_id)
+        if choiceUser == "add":
+            listing.watchlist = True
+            listing.save()
+        else:
+            listing.watchlist = False
+            listing.save()
+
+        return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
+        
+    else:
+        listings = AuctionListing.objects.filter(watchlist=True).all()
+        return render(request, "auctions/watchlist.html", {
+            "listings": listings
+        })
 
 
 def isNumber(value):
