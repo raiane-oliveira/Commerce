@@ -1,0 +1,58 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+    <h2>Listing: {{ listing.title }}</h2>
+    {% if winner %}
+        <span class="badge badge-danger">Closed Auction</span>
+    {% endif %}
+
+    {% if listing.imageURL %}
+        <div class="bg-light mr-3 w-100 border" style="height: 400px;">
+            <img class="img-fluid w-100 h-100" src="{{ listing.imageURL }}" alt="{{ listing.title }} Image" style="object-fit: contain;">
+        </div>
+    {% endif %}
+
+    <p class="lead mt-2">{{ listing.description }}</p>
+    <h3>
+        <span>$</span>
+        {{ listing.bid }}
+    </h3>
+
+    {% if not winner %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="newBid">New Bid:</label>
+                <input class="form-control" type="text" name="bid" id="newBid" placeholder="Bid">
+                <button class="btn btn-primary mt-2" type="submit">Place Bid</button>
+            </div>
+        </form>
+    {% endif %}
+
+    {% if message %}
+        <p class="text-danger">{{ message }}</p>
+    {% endif %}
+
+    <h4>Details</h4>
+    <ul>
+        <li>Listed by: <strong>{{ listing.user }}</strong></li>
+        {% if not category %}
+            <li>Category: No Category Listed</li>
+        {% else %}
+            <li>Category: {{ category }}</li>
+        {% endif %}
+        {% if winner %}
+            <li>Winner: <strong>{{ winner }}</strong></li>
+        {% endif %}
+    </ul>
+        
+    <hr>
+    {% if closeAuction %}
+        <form action="{% url 'closeAuction' listing.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Close Auction</button>
+        </form>
+    {% endif %}
+
+{% endblock %}

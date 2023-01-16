@@ -1,0 +1,32 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2 class="border-bottom pb-3">Watchlist</h2>
+
+    {% for listing in listings %}
+        <ul class="list-unstyled">
+            <li class="media shadow-sm mb-4 w-100 border">
+                {% if listing.imageURL %}
+                    <div style="height: 300px; width: 700px;" class="bg-light mr-3">
+                        <img class="img-fluid w-100 h-100" src="{{ listing.imageURL }}" alt="{{ listing.title }} Image" style="object-fit: contain;">
+                    </div>
+                {% endif %}
+                <div class="media-body px-3 py-4">
+                    <h5 class="mt-0">{{ listing.title }}</h5>
+                    <p class="">{{ listing.description }}</p>
+                    <p class="">
+                        <strong>Price:</strong> ${{ listing.bid }}
+                        <!-- {% if listing.category %}
+                            <p class="card-text p-2 rounded bg-info text-white d-inline">{{ listing.category }}</p>
+                        {% endif %} -->
+                    </p>
+                    <a href="{% url 'listings' listing.id %}" class="btn btn-primary ">Visit</a>
+                </div>
+            </li>
+        </ul>
+    {% empty %}
+        <p class="lead">
+            No listing added in Watchlist yet.
+        </p>
+    {% endfor %}
+{% endblock %}
