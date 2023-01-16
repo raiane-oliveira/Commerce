@@ -91,7 +91,7 @@ def create_listing(request):
             description = form.cleaned_data["description"]
             startBid = form.cleaned_data["bid"]
             imageURL = form.cleaned_data["imageURL"]
-            category = form.cleaned_data["category"]
+            category = form.cleaned_data["category"].capitalize()
 
             user = User.objects.get(id=request.user.id)
 
@@ -131,10 +131,10 @@ def create_listing(request):
 def listings(request, listing_id):
     listing = AuctionListing.objects.get(id=listing_id)
     category = listing.category.get(listing=listing_id)
+    winner = ""
     
     # If the user owns the listing, he can close the auction
     closeAuction = True if listing.user.id == request.user.id else False
-    winner = ""
 
     if request.method == 'POST':
 
@@ -214,6 +214,23 @@ def categories(request):
     categories = Categories.objects.all()
     return render(request, 'auctions/categories.html', {
         "categories": categories,
+    })
+
+
+@login_required(login_url="login")
+def categoryPage(request, category):
+
+    # Gets all active listings in that category
+    listingsCategory = list(Categories.objects.filter(category=category).all().values("listing_id"))
+    listings = []
+
+    for listing in listingsCategory:
+        auction = AuctionListing.objects.get(id=listing["listing_id"])
+        listings.append(auction)
+
+    return render(request, "auctions/categoryPage.html", {
+        "listings": listings,
+        "category": category
     })
 
 

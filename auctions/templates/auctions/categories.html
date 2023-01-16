@@ -6,12 +6,12 @@
 
     <ul class="list-unstyled">
         {% for category in categories %}
-            <li class="shadow-sm p-5 mb-3 border text-center">
-                <a href="">{{ category | upper }}</a>
+            <li class="shadow-sm p-4 mb-3 border-bottom text-center">
+                <a href="{% url 'categoryPage' category %}">{{ category | upper }}</a>
             </li>
         {% empty %}
             <li>
-                <p class="lead">No category added yet.</p>
+                <h3>No category added yet.</h3>
             </li>
         {% endfor %}
     </ul>
