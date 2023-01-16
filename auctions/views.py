@@ -93,7 +93,7 @@ def create_listing(request):
             imageURL = form.cleaned_data["imageURL"]
             category = form.cleaned_data["category"]
 
-            user = User.objects.get(pk=request.user.id)
+            user = User.objects.get(id=request.user.id)
 
             # Add data to the auction Listing model
             newListing = AuctionListing(
@@ -110,7 +110,7 @@ def create_listing(request):
             newCategory.save()
 
             # Add bid to the Bids model
-            bid = Bids(newBid=startBid, listing=newListing, user=user)
+            bid = Bids(bid=startBid, listing=newListing, user=user)
             bid.save()
 
             return HttpResponseRedirect(reverse("index"))
@@ -129,43 +129,56 @@ def create_listing(request):
 @login_required(login_url='login')
 def listings(request, listing_id):
     listing = AuctionListing.objects.get(id=listing_id)
+    category = listing.category.get(listing=listing_id)
+    
+    # If the user owns the listing, he can close the auction
+    closeAuction = True if listing.user.id == request.user.id else False
+    winner = ""
 
     if request.method == 'POST':
 
         # Checks if the new bid is valid
         newBid = isNumber(request.POST["bid"])
         if not newBid:
-            return render(request, "auctions/listing.html", {
-                "listing": listing,
-                "message": "Invalid Bid"
-            })
+            return HttpResponse("Invalid Bid!")
 
-        # Converts new bid to US dollar format
         newBid = locale.atof(request.POST["bid"])
-
-        listing = AuctionListing.objects.get(id=listing_id)
-        maxBids = listing.bids.aggregate(Max('newBid'))
-        userBids = Bids.objects.get(listing=listing_id)
-        userBids = userBids.user.all()
+        maxBids = listing.bids.aggregate(Max('bid'))
+        user = User.objects.get(pk=request.user.id)
 
         # Checks if the new bid is higher than the other
-        if newBid > maxBids['newBid__max']:
+        if newBid > maxBids['bid__max']:
             listing.bid = newBid
             listing.save()
 
-            bids = Bids(newBid=newBid, listing=listing)
+            bids = Bids(bid=newBid, listing=listing, user=user)
             bids.save()
         else:
-            return render(request, "auctions/listing.html", {
-                "listing": listing,
-                "userBids": userBids,
-                "message": "Bid cannot be lower than any other made"
-            })
+            return HttpResponse("Bid cannot be lower or equal than any other made!")
 
+    # Gets winner of auction
+    if listing.active == False:
+        maxBid = listing.bids.aggregate(Max('bid'))
+        winner = listing.bids.get(bid=maxBid["bid__max"])
 
     return render(request, "auctions/listing.html", {
         "listing": listing,
+        "category": category,
+        "closeAuction": closeAuction,
+        "winner": winner
     })
+
+
+@login_required(login_url='login')
+def closeAuction(request, listing_id):
+    if request.method == 'POST':
+
+        # Gets listing and deactivate it
+        listing = AuctionListing.objects.get(id=listing_id)
+        listing.active = False
+        listing.save()
+
+        return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
 
 
 def isNumber(value):

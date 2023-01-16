@@ -10,8 +10,8 @@ class User(AbstractUser):
 class AuctionListing(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
-    bid = models.DecimalField(max_digits=100, decimal_places=2)
     imageURL = models.URLField(blank=True)
+    bid = models.DecimalField(max_digits=100, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userListing")
 
     active = models.BooleanField(default=True)
@@ -25,12 +25,12 @@ class AuctionListing(models.Model):
 
 
 class Bids(models.Model):
-    newBid = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
+    bid = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="bids")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userBids")
 
     def __str__(self):
-        return f"{self.user}: {self.newBid}"
+        return f"{self.user}"
 
 
 class Categories(models.Model):
