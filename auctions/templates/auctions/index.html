@@ -1,6 +1,7 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
+
     <h2 class="pb-3">Active Listings</h2>
 
     {% if not user.is_authenticated %}
@@ -8,7 +9,6 @@
             Log in to use
         </p>
     {% else %}
-        <p>User id: {{ user }}</p>
         {% for listing in listings %}
             <ul class="list-unstyled">
                 <li class="media shadow-sm mb-4 w-100 border">
@@ -19,16 +19,15 @@
                     {% endif %}
                     <div class="media-body px-3 py-4">
                         <h5 class="mt-0">{{ listing.title }}</h5>
-                        <p class="">{{ listing.description }}</p>
-                        <p class="">
+                        <p>{{ listing.description }}</p>
+                        <p>
                             <strong>Price:</strong> ${{ listing.bid }}
-                            <!-- {% if listing.category %}
-                                <p class="card-text p-2 rounded bg-info text-white d-inline">{{ listing.category }}</p>
-                            {% endif %} -->
                         </p>
-                        {{ listing.active }}
-                        {{ listing.id }}
-                        Wachlist: {{ listing.watchlist }}
+                        <p>{{ listing.active }}
+                            {{ listing.id }}
+                            Wachlist: {{ listing.watchlist }}
+                        </p>
+                        <a href="{% url 'listings' listing.id %}" class="btn btn-primary">Visit</a>
                     </div>
                 </li>
             </ul>
@@ -39,4 +38,5 @@
             </p>
         {% endfor %}
     {% endif %}
+
 {% endblock %}

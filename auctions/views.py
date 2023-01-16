@@ -1,22 +1,26 @@
+import locale
+
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.db.models import Max
 
 from .models import *
 from .forms import *
 
+# Configure locale library to format numbers in USD money format
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
 
 def index(request):
-    user = User.objects.get(pk=request.user.id)
-    listings = AuctionListing.objects.all()
+    listings = AuctionListing.objects.filter(active=True).all()
 
     # listings.delete()
     return render(request, "auctions/index.html", {
         "listings": listings,
-        "user": user,
     })
 
 
@@ -72,6 +76,7 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
+@login_required(login_url='login')
 def create_listing(request):
     if request.method == "POST":
 
@@ -105,10 +110,8 @@ def create_listing(request):
             newCategory.save()
 
             # Add bid to the Bids model
-            bid = Bids(newBid=startBid, listing=newListing)
+            bid = Bids(newBid=startBid, listing=newListing, user=user)
             bid.save()
-
-            # newListing.active.add(newListing)
 
             return HttpResponseRedirect(reverse("index"))
 
@@ -121,3 +124,53 @@ def create_listing(request):
     return render(request, "auctions/createListing.html", {
         "form": FormNewListing()
     })
+
+
+@login_required(login_url='login')
+def listings(request, listing_id):
+    listing = AuctionListing.objects.get(id=listing_id)
+
+    if request.method == 'POST':
+
+        # Checks if the new bid is valid
+        newBid = isNumber(request.POST["bid"])
+        if not newBid:
+            return render(request, "auctions/listing.html", {
+                "listing": listing,
+                "message": "Invalid Bid"
+            })
+
+        # Converts new bid to US dollar format
+        newBid = locale.atof(request.POST["bid"])
+
+        listing = AuctionListing.objects.get(id=listing_id)
+        maxBids = listing.bids.aggregate(Max('newBid'))
+        userBids = Bids.objects.get(listing=listing_id)
+        userBids = userBids.user.all()
+
+        # Checks if the new bid is higher than the other
+        if newBid > maxBids['newBid__max']:
+            listing.bid = newBid
+            listing.save()
+
+            bids = Bids(newBid=newBid, listing=listing)
+            bids.save()
+        else:
+            return render(request, "auctions/listing.html", {
+                "listing": listing,
+                "userBids": userBids,
+                "message": "Bid cannot be lower than any other made"
+            })
+
+
+    return render(request, "auctions/listing.html", {
+        "listing": listing,
+    })
+
+
+def isNumber(value):
+    try:
+        float(value)
+    except ValueError:
+        return False
+    return True

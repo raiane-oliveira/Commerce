@@ -26,3 +26,8 @@ class FormNewListing(forms.Form):
         "class": "form-control"
     }))
 
+
+class FormNewBid(forms.Form):
+    bid = forms.DecimalField(label="New Bid:", decimal_places=2, min_value=1, localize=True, widget=forms.TextInput(attrs={
+        'class': 'form-control'
+    }))

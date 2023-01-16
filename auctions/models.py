@@ -25,11 +25,12 @@ class AuctionListing(models.Model):
 
 
 class Bids(models.Model):
-    newBid = models.DecimalField(max_digits=100, decimal_places=2, null=True, blank=True)
+    newBid = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="bids")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userBids")
 
     def __str__(self):
-        return f"{self.newBid}"
+        return f"{self.user}: {self.newBid}"
 
 
 class Categories(models.Model):
