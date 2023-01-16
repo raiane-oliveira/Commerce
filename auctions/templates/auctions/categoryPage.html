@@ -1,0 +1,32 @@
+{% extends 'auctions/layout.html' %}
+
+{% block body %}
+
+    <h2 class="pb-3">{{ category }}</h2>
+
+    <ul class="list-unstyled">
+        {% for listing in listings %}
+            <li class="media shadow-sm mb-4 w-100 border">
+                {% if listing.imageURL %}
+                    <div style="height: 300px; width: 700px;" class="bg-light mr-3">
+                        <img class="img-fluid w-100 h-100" src="{{ listing.imageURL }}" alt="{{ listing.title }} Image" style="object-fit: contain;">
+                    </div>
+                {% endif %}
+                <div class="media-body px-3 py-4">
+                    <h5 class="mt-0">{{ listing.title }}</h5>
+                    <p class="">{{ listing.description }}</p>
+                    <p class="">
+                        <strong>Price:</strong> ${{ listing.bid }}
+                    </p>
+                    <a href="{% url 'listings' listing.id %}" class="btn btn-primary ">Visit</a>
+                </div>
+            </li>
+        {% empty %}
+            <li>
+                <p class="lead">No listings with this category yet.</p>
+            </li>
+        {% endfor %}
+        <li>{{ listings.listing }}</li>
+    </ul>
+
+{% endblock %}
