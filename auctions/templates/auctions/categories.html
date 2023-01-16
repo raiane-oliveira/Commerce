@@ -1,0 +1,19 @@
+{% extends 'auctions/layout.html' %}
+
+{% block body %}
+
+    <h2 class="pb-3">Categories</h2>
+
+    <ul class="list-unstyled">
+        {% for category in categories %}
+            <li class="shadow-sm p-5 mb-3 border text-center">
+                <a href="">{{ category | upper }}</a>
+            </li>
+        {% empty %}
+            <li>
+                <p class="lead">No category added yet.</p>
+            </li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}

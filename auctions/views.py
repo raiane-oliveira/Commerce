@@ -106,8 +106,9 @@ def create_listing(request):
             newListing.save()
 
             # Add category
-            newCategory = Categories(category=category, listing=newListing)
-            newCategory.save()
+            if category:
+                newCategory = Categories(category=category, listing=newListing)
+                newCategory.save()
 
             # Add bid to the Bids model
             bid = Bids(bid=startBid, listing=newListing, user=user)
@@ -185,7 +186,6 @@ def closeAuction(request, listing_id):
 
 @login_required(login_url='login')
 def watchlist(request):
-
     if request.method == "POST":
 
         # Gets data from add form
@@ -201,12 +201,20 @@ def watchlist(request):
             listing.save()
 
         return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
-        
+
     else:
         listings = AuctionListing.objects.filter(watchlist=True).all()
         return render(request, "auctions/watchlist.html", {
             "listings": listings
         })
+
+
+@login_required(login_url='login')
+def categories(request):
+    categories = Categories.objects.all()
+    return render(request, 'auctions/categories.html', {
+        "categories": categories,
+    })
 
 
 def isNumber(value):

@@ -34,7 +34,7 @@ class Bids(models.Model):
 
 
 class Categories(models.Model):
-    category = models.CharField(max_length=100, blank=True)
+    category = models.CharField(max_length=100)
     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="category")
 
     def __str__(self):
