@@ -141,24 +141,44 @@ def create_listing(request):
 @login_required(login_url='login')
 def listings(request, listing_id):
     listing = AuctionListing.objects.get(id=listing_id)
-
-    if listing.category:
-        category = Categories.objects.get(category=listing.category)
-    else:
-        category = None
-
-    winner = ""
     comments = listing.comments.all()
-    
-    # If the user owns the listing, he can close the auction
-    listingOwner = True if listing.user.id == request.user.id else False
+    winner = None
 
+    # Highest bidder
+    maxBid = listing.bids.aggregate(Max('bid'))
+
+    # Gets current bid of listing and of user
+    amountBids = listing.bids.count()
+    currentBidUser = listing.bids.get(bid=maxBid["bid__max"]).user
+
+    # Gets winner of auction
+    if listing.active == False:
+        winner = listing.bids.get(bid=maxBid["bid__max"])
+
+    return render(request, "auctions/listing.html", {
+        "listing": listing,
+        "winner": winner,
+        "formComments": FormComments(),
+        "comments": comments,
+        "amountBids": amountBids,
+        "currentBidUser": currentBidUser
+    })
+
+
+@login_required(login_url='login')
+def newBid(request, listing_id):
     if request.method == 'POST':
 
         # Checks if the new bid is valid
         newBid = isNumber(request.POST["bid"])
         if not newBid:
-            return HttpResponse("Invalid Bid!")
+            return render(request, "auctions/error.html", {
+                "reason": "Input error",
+                "message": "Invalid Bid"
+            })
+
+        # Gets listing by id
+        listing = AuctionListing.objects.get(id=listing_id)
 
         # Converts bid to US dollar format and take the highest bid
         newBid = locale.atof(request.POST["bid"])
@@ -173,21 +193,14 @@ def listings(request, listing_id):
             bids = Bids(bid=newBid, listing=listing, user=user)
             bids.save()
         else:
-            return HttpResponse("Bid cannot be lower or equal than any other made!")
+            return render(request, "auctions/error.html", {
+                "reason": "Error when placing a new bid",
+                "message": "Bid cannot be lower or equal than any other made"
+            })
 
-    # Gets winner of auction
-    if listing.active == False:
-        maxBid = listing.bids.aggregate(Max('bid'))
-        winner = listing.bids.get(bid=maxBid["bid__max"])
+        return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
 
-    return render(request, "auctions/listing.html", {
-        "listing": listing,
-        "category": category,
-        "listingOwner": listingOwner,
-        "winner": winner,
-        "formComments": FormComments(),
-        "comments": comments
-    })
+    return HttpResponseRedirect(reverse("index"))
 
 
 @login_required(login_url='login')

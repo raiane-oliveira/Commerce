@@ -39,11 +39,17 @@
     <!-- New bids -->
     <div>
         {% if not winner %}
-            <form method="post">
+            <span>{{ amountBids }} bid(s) so far.
+                {% if currentBidUser == request.user %}
+                    Your bid is the current bid.
+                {% else %}
+                    {{ currentBidUser }} owns the current bid.
+                {% endif %}
+            </span>
+            <form action="{% url 'newBid' listing.id %}" method="post">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="newBid">New Bid:</label>
-                    <input class="form-control" type="text" name="bid" id="newBid" placeholder="Bid">
+                    <input class="form-control" type="text" name="bid" placeholder="Bid">
                     <input class="btn btn-primary mt-2" type="submit" value="Place Bid">
                 </div>
             </form>
@@ -57,10 +63,10 @@
         <ul>
             <li>Listed by: <strong>{{ listing.user }}</strong></li>
 
-            {% if not category %}
+            {% if not listing.category %}
                 <li>Category: No Category Listed</li>
             {% else %}
-                <li>Category: {{ category }}</li>
+                <li>Category: {{ listing.category }}</li>
             {% endif %}
         </ul>
         <hr>
@@ -95,7 +101,7 @@
 
     <!-- Close auction and watchlist buttons -->
     <div class="d-flex">
-        {% if listingOwner and not winner %}
+        {% if listing.user == request.user and not winner %}
             <form action="{% url 'closeAuction' listing.id %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">Close Auction</button>

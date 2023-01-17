@@ -1,0 +1,10 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}
+    Auctions | Error
+{% endblock %}
+
+{% block body %}
+    <h2 class="text-secondary">{{ reason }}:</h2>
+    <h3 class="font-weight-normal text-danger">{{ message }}!</h3>
+{% endblock %}
