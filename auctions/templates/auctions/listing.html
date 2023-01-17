@@ -2,59 +2,89 @@
 
 {% block body %}
 
-    <h2>Listing: {{ listing.title }}</h2>
-    {% if winner %}
-        <span class="badge badge-danger">Closed Auction</span>
-    {% endif %}
-    {% if listing.watchlist %}
-        <span class="badge badge-secondary">Watchlist</span>
-    {% endif %}
-
-    {% if listing.imageURL %}
-        <div class="bg-light mr-3 w-100 border" style="height: 400px;">
-            <img class="img-fluid w-100 h-100" src="{{ listing.imageURL }}" alt="{{ listing.title }} Image" style="object-fit: contain;">
+    <!-- Listing details -->
+    <div>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Listing: {{ listing.title }}</h2>
+            <small class="text-muted">Created {{ listing.time }}</small>
         </div>
-    {% endif %}
-
-    <p class="lead mt-2">{{ listing.description }}</p>
-    <h3>
-        <span>$</span>
-        {{ listing.bid }}
-    </h3>
-
-    {% if not winner %}
-        <form method="post">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="newBid">New Bid:</label>
-                <input class="form-control" type="text" name="bid" id="newBid" placeholder="Bid">
-                <button class="btn btn-primary mt-2" type="submit">Place Bid</button>
-            </div>
-        </form>
-    {% endif %}
-
-    {% if message %}
-        <p class="text-danger">{{ message }}</p>
-    {% endif %}
-
-    <h4>Details</h4>
-    <ul>
-        <li>Listed by: <strong>{{ listing.user }}</strong></li>
-
-        {% if not category %}
-            <li>Category: No Category Listed</li>
-        {% else %}
-            <li>Category: {{ category }}</li>
-        {% endif %}
-
-        {% if winner %}
-            <li>Winner: <strong>{{ winner }}</strong></li>
-        {% endif %}
-    </ul>
         
-    <hr>
-    <div class="row mx-2">
-        {% if closeAuction %}
+        {% if winner %}
+        <span class="badge badge-danger">Closed Auction</span>
+        {% endif %}
+        
+        {% if listing.watchlist %}
+        <span class="badge badge-secondary">Watchlist</span>
+        {% endif %}
+        
+        {% if listing.imageURL %}
+            <div class="bg-light mr-3 mt-2 w-100 border" style="height: 400px;">
+                <img class="img-fluid w-100 h-100" src="{{ listing.imageURL }}" alt="{{ listing.title }} Image" style="object-fit: contain;">
+            </div>
+        {% endif %}
+        <p class="lead mt-2">{{ listing.description }}</p>
+        <h3><span>$</span>
+            {{ listing.bid }}
+        </h3>
+    </div>
+
+    <!-- New bids -->
+    <div>
+        {% if not winner %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="newBid">New Bid:</label>
+                    <input class="form-control" type="text" name="bid" id="newBid" placeholder="Bid">
+                    <input class="btn btn-primary mt-2" type="submit" value="Place Bid">
+                </div>
+            </form>
+        {% endif %}
+    </div>
+
+    <!-- Other details -->
+    <div>
+        <h4>Details</h4>
+        <ul>
+            <li>Listed by: <strong>{{ listing.user }}</strong></li>
+
+            {% if not category %}
+                <li>Category: No Category Listed</li>
+            {% else %}
+                <li>Category: {{ category }}</li>
+            {% endif %}
+
+            {% if winner %}
+                <li>Winner: <strong>{{ winner }}</strong></li>
+            {% endif %}
+        </ul>
+        <hr>
+    </div>
+
+    <!-- Comments -->
+    <div>
+        <h4>Comments</h4>
+        <div class="card my-3">
+            {% for comment in comments %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ comment.user }}</h5>
+                    <p class="card-text">{{ comment.comment }}</p>
+                    <small>{{ comment.time }}</small>
+                </div>
+            {% endfor %}
+        </div>
+
+        <form action="{% url 'comments' listing.id %}" class="form-group" method="post">
+            {% csrf_token %}
+            {{ formComments }}
+            <button type="submit" class="btn btn-outline-success mt-3">Add new Comment</button>
+        </form>
+        <hr>
+    </div>
+
+    <!-- Close auction and watchlist buttons -->
+    <div class="d-flex">
+        {% if listingOwner %}
             <form action="{% url 'closeAuction' listing.id %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">Close Auction</button>

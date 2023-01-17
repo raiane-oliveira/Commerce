@@ -14,6 +14,11 @@
                 {% endif %}
                 <div class="media-body px-3 py-4">
                     <h5 class="mt-0">{{ listing.title }}</h5>
+                    
+                    {% if not listing.active %}
+                        <span class="badge badge-danger mb-1">Closed Auction</span>
+                    {% endif %}
+
                     <p class="">{{ listing.description }}</p>
                     <p class="">
                         <strong>Price:</strong> ${{ listing.bid }}

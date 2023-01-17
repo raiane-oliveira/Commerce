@@ -19,10 +19,11 @@
                     {% endif %}
                     <div class="media-body px-3 py-4">
                         <h5 class="mt-0">{{ listing.title }}</h5>
-                        <p>{{ listing.description }}</p>
-                        <p>
+                        <p class="my-0">{{ listing.description }}</p>
+                        <p class="my-2">
                             <strong>Price:</strong> ${{ listing.bid }}
                         </p>
+                        <small class="text-muted d-block mb-3">Created {{ listing.time }}</small>
                         <a href="{% url 'listings' listing.id %}" class="btn btn-primary">Visit</a>
                     </div>
                 </li>

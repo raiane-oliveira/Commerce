@@ -87,28 +87,39 @@ def create_listing(request):
         if form.is_valid():
 
             # Gets data from form
-            title = form.cleaned_data["title"]
+            title = form.cleaned_data["title"].strip()
             description = form.cleaned_data["description"]
             startBid = form.cleaned_data["bid"]
             imageURL = form.cleaned_data["imageURL"]
-            category = form.cleaned_data["category"].capitalize()
+            category = form.cleaned_data["category"].strip().capitalize()
 
             user = User.objects.get(id=request.user.id)
+            category_id = None
+
+            if category:
+                categories = list(Categories.objects.all().values_list("category", flat=True))
+
+                # Add new category
+                if category not in categories:
+                    newCategory = Categories(category=category)
+                    newCategory.save()
+                    category_id = newCategory
+                
+                # Takes a existing category
+                else:
+                    category_id = Categories.objects.get(category=category)
+
 
             # Add data to the auction Listing model
             newListing = AuctionListing(
                 title=title, 
                 description=description, 
-                imageURL = imageURL,
                 bid=startBid,
+                imageURL=imageURL,
+                category=category_id,
                 user=user,
             )
             newListing.save()
-
-            # Add category
-            if category:
-                newCategory = Categories(category=category, listing=newListing)
-                newCategory.save()
 
             # Add bid to the Bids model
             bid = Bids(bid=startBid, listing=newListing, user=user)
@@ -130,28 +141,30 @@ def create_listing(request):
 @login_required(login_url='login')
 def listings(request, listing_id):
     listing = AuctionListing.objects.get(id=listing_id)
-    category = listing.category.get(listing=listing_id)
+    category = Categories.objects.get(category=listing.category)
     winner = ""
+    comments = listing.comments.all()
     
     # If the user owns the listing, he can close the auction
-    closeAuction = True if listing.user.id == request.user.id else False
+    listingOwner = True if listing.user.id == request.user.id else False
 
     if request.method == 'POST':
 
         # Checks if the new bid is valid
-        newBid = isNumber(request.POST["bid"])
+        newBid = isNumber(locale.atof(request.POST["bid"]))
         if not newBid:
             return HttpResponse("Invalid Bid!")
 
+        # Converts bid to US dollar format and take the highest bid
         newBid = locale.atof(request.POST["bid"])
-        maxBids = listing.bids.aggregate(Max('bid'))
-        user = User.objects.get(pk=request.user.id)
+        maxBid = listing.bids.aggregate(Max('bid'))
 
         # Checks if the new bid is higher than the other
-        if newBid > maxBids['bid__max']:
+        if newBid > maxBid['bid__max']:
             listing.bid = newBid
             listing.save()
 
+            user = User.objects.get(pk=request.user.id)
             bids = Bids(bid=newBid, listing=listing, user=user)
             bids.save()
         else:
@@ -165,8 +178,10 @@ def listings(request, listing_id):
     return render(request, "auctions/listing.html", {
         "listing": listing,
         "category": category,
-        "closeAuction": closeAuction,
-        "winner": winner
+        "listingOwner": listingOwner,
+        "winner": winner,
+        "formComments": FormComments(),
+        "comments": comments
     })
 
 
@@ -174,7 +189,7 @@ def listings(request, listing_id):
 def closeAuction(request, listing_id):
     if request.method == 'POST':
 
-        # Gets listing and deactivate it
+        # Gets listing and disable it
         listing = AuctionListing.objects.get(id=listing_id)
         listing.active = False
         listing.save()
@@ -221,17 +236,41 @@ def categories(request):
 def categoryPage(request, category):
 
     # Gets all active listings in that category
-    listingsCategory = list(Categories.objects.filter(category=category).all().values("listing_id"))
-    listings = []
-
-    for listing in listingsCategory:
-        auction = AuctionListing.objects.get(id=listing["listing_id"])
-        listings.append(auction)
+    category_id = Categories.objects.get(category=category)
+    listings = list(AuctionListing.objects.filter(category=category_id.id).all())
 
     return render(request, "auctions/categoryPage.html", {
         "listings": listings,
         "category": category
     })
+
+
+@login_required(login_url="login")
+def comments(request, listing_id):
+    if request.method == "POST":
+        form = FormComments(request.POST)
+
+        if form.is_valid():
+
+            # Gets data
+            commentText = form.cleaned_data["comment"].strip()
+            user = User.objects.get(id=request.user.id)
+            listing = AuctionListing.objects.get(id=listing_id)
+
+            # Add comment to model django
+            newComment = Comments(comment=commentText, user=user, listing=listing)
+            newComment.save()
+
+            return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
+
+        else:
+            return render(request, "auctions/listing.html", {
+                "formComments": form
+            })
+
+    else:
+        return HttpResponseRedirect(reverse("index"))
+
 
 
 def isNumber(value):
