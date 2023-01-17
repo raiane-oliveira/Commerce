@@ -141,7 +141,12 @@ def create_listing(request):
 @login_required(login_url='login')
 def listings(request, listing_id):
     listing = AuctionListing.objects.get(id=listing_id)
-    category = Categories.objects.get(category=listing.category)
+
+    if listing.category:
+        category = Categories.objects.get(category=listing.category)
+    else:
+        category = None
+
     winner = ""
     comments = listing.comments.all()
     
@@ -151,7 +156,7 @@ def listings(request, listing_id):
     if request.method == 'POST':
 
         # Checks if the new bid is valid
-        newBid = isNumber(locale.atof(request.POST["bid"]))
+        newBid = isNumber(request.POST["bid"])
         if not newBid:
             return HttpResponse("Invalid Bid!")
 

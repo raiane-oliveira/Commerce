@@ -1,5 +1,9 @@
 {% extends "auctions/layout.html" %}
 
+{% block title %}
+    Auctions | {{ listing.title }}
+{% endblock %}
+
 {% block body %}
 
     <!-- Listing details -->
@@ -10,11 +14,11 @@
         </div>
         
         {% if winner %}
-        <span class="badge badge-danger">Closed Auction</span>
+            <span class="badge badge-danger">Closed Auction</span>
         {% endif %}
         
         {% if listing.watchlist %}
-        <span class="badge badge-secondary">Watchlist</span>
+            <span class="badge badge-secondary">Watchlist</span>
         {% endif %}
         
         {% if listing.imageURL %}
@@ -26,6 +30,10 @@
         <h3><span>$</span>
             {{ listing.bid }}
         </h3>
+
+        {% if winner.user == request.user %}
+            <p class="text-success lead font-weight-bold">You won this auction!</p>
+        {% endif %}
     </div>
 
     <!-- New bids -->
@@ -40,6 +48,7 @@
                 </div>
             </form>
         {% endif %}
+        <hr>
     </div>
 
     <!-- Other details -->
@@ -53,38 +62,40 @@
             {% else %}
                 <li>Category: {{ category }}</li>
             {% endif %}
-
-            {% if winner %}
-                <li>Winner: <strong>{{ winner }}</strong></li>
-            {% endif %}
         </ul>
         <hr>
     </div>
 
     <!-- Comments -->
-    <div>
-        <h4>Comments</h4>
-        <div class="card my-3">
+    {% if not winner %}
+        <div>
+            <h4>Comments</h4>
             {% for comment in comments %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ comment.user }}</h5>
-                    <p class="card-text">{{ comment.comment }}</p>
-                    <small>{{ comment.time }}</small>
+                <div class="card my-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="card-title">{{ comment.user }}</h5>
+                            <small class="text-muted">{{ comment.time }}</small>
+                        </div>
+                        <p class="card-text">{{ comment.comment }}</p>
+                    </div>
                 </div>
+            {% empty %}
             {% endfor %}
-        </div>
 
-        <form action="{% url 'comments' listing.id %}" class="form-group" method="post">
-            {% csrf_token %}
-            {{ formComments }}
-            <button type="submit" class="btn btn-outline-success mt-3">Add new Comment</button>
-        </form>
-        <hr>
-    </div>
+            <p class="lead">Add comment:</p>
+            <form action="{% url 'comments' listing.id %}" class="form-group" method="post">
+                {% csrf_token %}
+                {{ formComments }}
+                <button type="submit" class="btn btn-outline-success mt-3">Add new Comment</button>
+            </form>
+            <hr>
+        </div>
+    {% endif %}
 
     <!-- Close auction and watchlist buttons -->
     <div class="d-flex">
-        {% if listingOwner %}
+        {% if listingOwner and not winner %}
             <form action="{% url 'closeAuction' listing.id %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">Close Auction</button>
@@ -92,14 +103,14 @@
         {% endif %}
         
         {% if not listing.watchlist %}
-            <form action="{% url 'watchlist' %}" method="post" class="ml-2">
+            <form action="{% url 'watchlist' %}" method="post" class="ml-1">
                 {% csrf_token %}
                 <input type="hidden" name="watchlist" value="add">
                 <input type="hidden" name="listing_id" value="{{ listing.id }}">
                 <button type="submit" class="btn btn-secondary">Add to Watchlist</button>
             </form>
         {% else %}
-            <form action="{% url 'watchlist' %}" method="post" class="ml-2">
+            <form action="{% url 'watchlist' %}" method="post" class="ml-1">
                 {% csrf_token %}
                 <input type="hidden" name="watchlist" value="remove">
                 <input type="hidden" name="listing_id" value="{{ listing.id }}">

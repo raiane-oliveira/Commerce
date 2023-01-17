@@ -1,5 +1,9 @@
 {% extends 'auctions/layout.html' %}
 
+{% block title %}
+    Auctions | {{ category }}
+{% endblock %}
+
 {% block body %}
 
     <h2 class="pb-3">Category: {{ category }}</h2>
@@ -13,7 +17,12 @@
                     </div>
                 {% endif %}
                 <div class="media-body px-3 py-4">
-                    <h5 class="mt-0">{{ listing.title }}</h5>
+                    <h5 class="my-0">{{ listing.title }}</h5>
+
+                    {% if not listing.active %}
+                        <span class="badge badge-danger my-2">Closed Auction</span>
+                    {% endif %}
+
                     <p class="">{{ listing.description }}</p>
                     <p class="">
                         <strong>Price:</strong> ${{ listing.bid }}

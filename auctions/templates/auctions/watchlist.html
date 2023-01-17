@@ -1,5 +1,9 @@
 {% extends "auctions/layout.html" %}
 
+{% block title %}
+    Auctions | Watchlist
+{% endblock %}
+
 {% block body %}
     <h2>Watchlist</h2>
     <p class="lead">Your watched Auction Listings:</p>
@@ -13,17 +17,18 @@
                     </div>
                 {% endif %}
                 <div class="media-body px-3 py-4">
-                    <h5 class="mt-0">{{ listing.title }}</h5>
-                    
+                    <h5 class="my-0">{{ listing.title }}</h5>
+
                     {% if not listing.active %}
-                        <span class="badge badge-danger mb-1">Closed Auction</span>
+                        <span class="badge badge-danger my-2">Closed Auction</span>
                     {% endif %}
 
-                    <p class="">{{ listing.description }}</p>
-                    <p class="">
+                    <p>{{ listing.description }}</p>
+                    <p class="my-2">
                         <strong>Price:</strong> ${{ listing.bid }}
                     </p>
-                    <a href="{% url 'listings' listing.id %}" class="btn btn-primary ">Visit</a>
+                    <small class="text-muted d-block mb-3">Created {{ listing.time }}</small>
+                    <a href="{% url 'listings' listing.id %}" class="btn btn-primary">Visit</a>
                 </div>
             </li>
         </ul>
