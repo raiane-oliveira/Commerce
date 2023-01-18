@@ -1,5 +1,3 @@
-import locale
-
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect
@@ -10,10 +8,6 @@ from django.db.models import Max
 
 from .models import *
 from .forms import *
-
-# Configure locale library to format numbers in USD money format
-locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-
 
 def index(request):
     listings = AuctionListing.objects.filter(active=True).all()
