@@ -1,5 +1,7 @@
 {% extends "auctions/layout.html" %}
 
+{% load humanize %}
+
 {% block title %}
     Auctions | Watchlist
 {% endblock %}
@@ -8,27 +10,27 @@
     <h2>Watchlist</h2>
     <p class="lead">Your watched Auction Listings:</p>
 
-    {% for listing in listings %}
+    {% for auction in listings %}
         <ul class="list-unstyled">
             <li class="media shadow-sm mb-4 w-100 border">
-                {% if listing.imageURL %}
+                {% if auction.listing.imageURL %}
                     <div style="height: 300px; width: 700px;" class="bg-light mr-3">
-                        <img class="img-fluid w-100 h-100" src="{{ listing.imageURL }}" alt="{{ listing.title }} Image" style="object-fit: contain;">
+                        <img class="img-fluid w-100 h-100" src="{{ auction.listing.imageURL }}" alt="{{ listing.title }} Image" style="object-fit: contain;">
                     </div>
                 {% endif %}
                 <div class="media-body px-3 py-4">
-                    <h5 class="my-0">{{ listing.title }}</h5>
+                    <h5 class="mt-0">{{ auction.listing.title }}</h5>
 
-                    {% if not listing.active %}
+                    {% if not auction.listing.active %}
                         <span class="badge badge-danger my-2">Closed Auction</span>
                     {% endif %}
 
-                    <p>{{ listing.description }}</p>
+                    <p class="my-0">{{ auction.listing.description }}</p>
                     <p class="my-2">
-                        <strong>Price:</strong> ${{ listing.bid }}
+                        <strong>Price:</strong> ${{ auction.listing.bid }}
                     </p>
-                    <small class="text-muted d-block mb-3">Created {{ listing.time }}</small>
-                    <a href="{% url 'listings' listing.id %}" class="btn btn-primary">Visit</a>
+                    <small class="text-muted d-block mb-3">Created {{ auction.listing.time | naturalday }}</small>
+                    <a href="{% url 'listings' auction.listing.id %}" class="btn btn-primary">Visit</a>
                 </div>
             </li>
         </ul>

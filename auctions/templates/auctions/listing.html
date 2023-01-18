@@ -1,5 +1,7 @@
 {% extends "auctions/layout.html" %}
 
+{% load humanize %}
+
 {% block title %}
     Auctions | {{ listing.title }}
 {% endblock %}
@@ -10,14 +12,14 @@
     <div>
         <div class="d-flex justify-content-between align-items-center">
             <h2>Listing: {{ listing.title }}</h2>
-            <small class="text-muted">Created {{ listing.time }}</small>
+            <small class="text-muted">Created {{ listing.time | naturaltime }}</small>
         </div>
         
         {% if winner %}
             <span class="badge badge-danger">Closed Auction</span>
         {% endif %}
         
-        {% if listing.watchlist %}
+        {% if watchlist.watchlist %}
             <span class="badge badge-secondary">Watchlist</span>
         {% endif %}
         
@@ -27,7 +29,8 @@
             </div>
         {% endif %}
         <p class="lead mt-2">{{ listing.description }}</p>
-        <h3><span>$</span>
+
+        <h3 class="mb-3"><span>$</span>
             {{ listing.bid }}
         </h3>
 
@@ -46,10 +49,11 @@
                     {{ currentBidUser }} owns the current bid.
                 {% endif %}
             </span>
+
             <form action="{% url 'newBid' listing.id %}" method="post">
                 {% csrf_token %}
-                <div class="form-group">
-                    <input class="form-control" type="text" name="bid" placeholder="Bid">
+                <div class="form-group mt-1">
+                    {{ formNewBid }}
                     <input class="btn btn-primary mt-2" type="submit" value="Place Bid">
                 </div>
             </form>
@@ -73,7 +77,6 @@
     </div>
 
     <!-- Comments -->
-    {% if not winner %}
         <div>
             <h4>Comments</h4>
             {% for comment in comments %}
@@ -81,23 +84,26 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <h5 class="card-title">{{ comment.user }}</h5>
-                            <small class="text-muted">{{ comment.time }}</small>
+                            <small class="text-muted">{{ comment.time | naturaltime }}</small>
                         </div>
                         <p class="card-text">{{ comment.comment }}</p>
                     </div>
                 </div>
             {% empty %}
+                <p class="lead">No comments.</p>
+                <hr>
             {% endfor %}
 
-            <p class="lead">Add comment:</p>
-            <form action="{% url 'comments' listing.id %}" class="form-group" method="post">
-                {% csrf_token %}
-                {{ formComments }}
-                <button type="submit" class="btn btn-outline-success mt-3">Add new Comment</button>
-            </form>
-            <hr>
+            {% if not winner %}
+                <p class="lead">Add comment:</p>
+                <form action="{% url 'comments' listing.id %}" class="form-group" method="post">
+                    {% csrf_token %}
+                    {{ formComments }}
+                    <button type="submit" class="btn btn-outline-success mt-3">Add new Comment</button>
+                </form>
+                <hr>
+            {% endif %}
         </div>
-    {% endif %}
 
     <!-- Close auction and watchlist buttons -->
     <div class="d-flex">
@@ -107,8 +113,8 @@
                 <button type="submit" class="btn btn-danger">Close Auction</button>
             </form>
         {% endif %}
-        
-        {% if not listing.watchlist %}
+
+        {% if watchlist.watchlist != True %}
             <form action="{% url 'watchlist' %}" method="post" class="ml-1">
                 {% csrf_token %}
                 <input type="hidden" name="watchlist" value="add">

@@ -7,48 +7,63 @@
 {% block body %}
     <div class="container text-center">
         <h1>Creates Listing</h1>
+
         <form action="{% url 'create_listing' %}" method="post">
             {% csrf_token %}
             <hr style="width: 50%;">
 
+            <!-- Required fields -->
             <fieldset>
-                <legend class="h4">Required Fields</legend>
-                <div class="form-group">
-                    <label class="lead">{{ form.title.label }}
+                <div class="row justify-content-center">
+                    <div class="form-group col-6">
+                        <label for="{{ form.title.id_for_label }}" class="lead d-block">{{ form.title.label }}
+                            <span class="text-danger">*</span>
+                        </label>
                         {{ form.title }}
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label class="lead">{{ form.description.label }}
-                        {{ form.description }}
-                    </label>
-                </div>
-                
-                <div class="form-group">
-                    <label class="lead">{{ form.bid.label }}
+                        {{ form.title.errors }}
+                    </div>
+                    
+                    <div class="form-group col-3">
+                        <label for="{{ form.bid.id_for_label }}" class="lead">{{ form.bid.label }}
+                            <span class="text-danger">*</span>
+                        </label>
                         {{ form.bid }}
-                    </label>
+                        {{ form.bid.errors }}
+                    </div>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="form-group col-9">
+                        <label for="{{ form.description.id_for_label }}" class="lead">{{ form.description.label }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
                 </div>
             </fieldset>
-            <hr style="width: 50%;">
 
+            <!-- Optional fields -->
             <fieldset>
-                <legend class="h4">Optional Fields</legend>
-                <div class="form-group">
-                    <label class="lead">{{ form.imageURL.label }}
+                <div class="row justify-content-center">
+                    <div class="form-group col-9">
+                        <label for="{{ form.imageURL.id_for_label }}" class="lead">{{ form.imageURL.label }}</label>
                         {{ form.imageURL }}
-                    </label>
+                        {{ form.imageURL.errors }}
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="lead">{{ form.category.label }}
+                <div class="row justify-content-center">
+                    <div class="form-group col-3">
+                        <label for="{{ form.category.id_for_label }}" class="lead">{{ form.category.label }}</label>
                         {{ form.category }}
-                    </label>
+                        {{ form.category.errors }}
+                    </div>
                 </div>
             </fieldset>
 
-            <hr style="width: 50%;">
-            <input class="btn btn-outline-success btn-lg" type="submit" value="Create listing">
+             <hr style="width: 50%;">
+            <input class="btn btn-success btn-lg" type="submit" value="Create listing">
         </form>
     </div>
 {% endblock %}

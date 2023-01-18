@@ -2,7 +2,7 @@ import locale
 
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -93,44 +93,38 @@ def create_listing(request):
             imageURL = form.cleaned_data["imageURL"]
             category = form.cleaned_data["category"].strip().capitalize()
 
-            user = User.objects.get(id=request.user.id)
-            category_id = None
-
             if category:
                 categories = list(Categories.objects.all().values_list("category", flat=True))
 
-                # Add new category
                 if category not in categories:
-                    newCategory = Categories(category=category)
-                    newCategory.save()
-                    category_id = newCategory
-                
-                # Takes a existing category
+                    category = Categories.objects.create(category=category)
                 else:
-                    category_id = Categories.objects.get(category=category)
-
+                    category = Categories.objects.get(category=category)
+            else:
+                category = None
 
             # Add data to the auction Listing model
-            newListing = AuctionListing(
+            user = User.objects.get(id=request.user.id)
+            newListing = AuctionListing.objects.create(
                 title=title, 
                 description=description, 
                 bid=startBid,
                 imageURL=imageURL,
-                category=category_id,
+                category=category,
                 user=user,
             )
-            newListing.save()
 
-            # Add bid to the Bids model
-            bid = Bids(bid=startBid, listing=newListing, user=user)
-            bid.save()
+            # Adds starting bid to track all other bids
+            bid = Bids.objects.create(bid=startBid, listing=newListing, user=user)
+
+            watchlist = Watchlist.objects.create(listing=newListing, user=user)
 
             return HttpResponseRedirect(reverse("index"))
 
         # Re-render the page with error messages
         else:
             return render(request, "auctions/createListing.html", {
-                "form": form
+                "form": form,
             })
 
     return render(request, "auctions/createListing.html", {
@@ -140,14 +134,24 @@ def create_listing(request):
 
 @login_required(login_url='login')
 def listings(request, listing_id):
+
+    # Gets listing by its id and all its comments
     listing = AuctionListing.objects.get(id=listing_id)
     comments = listing.comments.all()
+
+    # Checks if there is a watchlist for the listing, otherwise creates one
+    try:
+        watchlist = Watchlist.objects.get(listing=listing, user=request.user.id)
+    except:
+        user = User.objects.get(id=request.user.id)
+        watchlist = Watchlist.objects.create(listing=listing, user=user)
+
     winner = None
 
     # Highest bidder
     maxBid = listing.bids.aggregate(Max('bid'))
 
-    # Gets current bid of listing and of user
+    # Gets amount of bids and current bid of user
     amountBids = listing.bids.count()
     currentBidUser = listing.bids.get(bid=maxBid["bid__max"]).user
 
@@ -158,8 +162,10 @@ def listings(request, listing_id):
     return render(request, "auctions/listing.html", {
         "listing": listing,
         "winner": winner,
-        "formComments": FormComments(),
+        "watchlist": watchlist,
         "comments": comments,
+        "formComments": FormComments(),
+        "formNewBid": FormNewBid(),
         "amountBids": amountBids,
         "currentBidUser": currentBidUser
     })
@@ -168,50 +174,44 @@ def listings(request, listing_id):
 @login_required(login_url='login')
 def newBid(request, listing_id):
     if request.method == 'POST':
+        form = FormNewBid(request.POST)
 
-        # Checks if the new bid is valid
-        newBid = isNumber(request.POST["bid"])
-        if not newBid:
-            return render(request, "auctions/error.html", {
-                "reason": "Input error",
-                "message": "Invalid Bid"
-            })
+        if form.is_valid():
 
-        # Gets listing by id
-        listing = AuctionListing.objects.get(id=listing_id)
+            # Gets listing by id
+            listing = AuctionListing.objects.get(id=listing_id)
 
-        # Converts bid to US dollar format and take the highest bid
-        newBid = locale.atof(request.POST["bid"])
-        maxBid = listing.bids.aggregate(Max('bid'))
+            # Takes the new bid and the highest bid from listing
+            newBid = form.cleaned_data["bid"]
+            maxBid = listing.bids.aggregate(Max('bid'))
 
-        # Checks if the new bid is higher than the other
-        if newBid > maxBid['bid__max']:
-            listing.bid = newBid
-            listing.save()
+            # Checks if the new bid is higher than the other
+            if newBid > maxBid['bid__max']:
+                listing.bid = newBid
+                listing.save()
 
-            user = User.objects.get(pk=request.user.id)
-            bids = Bids(bid=newBid, listing=listing, user=user)
-            bids.save()
+                user = User.objects.get(pk=request.user.id)
+                bids = Bids.objects.create(bid=newBid, listing=listing, user=user)
+            else:
+                return render(request, "auctions/error.html", {
+                    "message": "Bid cannot be lower or equal than any other made"
+                })
+
+            return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
         else:
             return render(request, "auctions/error.html", {
-                "reason": "Error when placing a new bid",
-                "message": "Bid cannot be lower or equal than any other made"
+                "message": "Invalid Bid"
             })
-
-        return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
 
     return HttpResponseRedirect(reverse("index"))
 
 
 @login_required(login_url='login')
 def closeAuction(request, listing_id):
+
+    # Gets listing and disable it
     if request.method == 'POST':
-
-        # Gets listing and disable it
-        listing = AuctionListing.objects.get(id=listing_id)
-        listing.active = False
-        listing.save()
-
+        listing = AuctionListing.objects.filter(id=listing_id).update(active=False)
         return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
     else:
         return HttpResponseRedirect(reverse("index"))
@@ -219,27 +219,27 @@ def closeAuction(request, listing_id):
 
 @login_required(login_url='login')
 def watchlist(request):
+    user = User.objects.get(id=request.user.id)
     if request.method == "POST":
 
-        # Gets data from add form
+        # Gets data from form
         listing_id = request.POST["listing_id"]
         choiceUser = request.POST["watchlist"]
 
         listing = AuctionListing.objects.get(id=listing_id)
-        if choiceUser == "add":
-            listing.watchlist = True
-            listing.save()
-        else:
-            listing.watchlist = False
-            listing.save()
 
+        if choiceUser == "add":
+            Watchlist.objects.filter(listing=listing, user=user).update(watchlist=True)
+        else:
+            Watchlist.objects.filter(listing=listing, user=user).update(watchlist=False)
+            
         return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
 
-    else:
-        listings = AuctionListing.objects.filter(watchlist=True).all()
-        return render(request, "auctions/watchlist.html", {
-            "listings": listings
-        })
+    # listings = Watchlist.objects.filter(watchlist=True, user=request.user.id).all()
+    listings = user.userWatchlist.all()
+    return render(request, "auctions/watchlist.html", {
+        "listings": listings
+    })
 
 
 @login_required(login_url='login')
@@ -276,9 +276,7 @@ def comments(request, listing_id):
             listing = AuctionListing.objects.get(id=listing_id)
 
             # Add comment to model django
-            newComment = Comments(comment=commentText, user=user, listing=listing)
-            newComment.save()
-
+            newComment = Comments.objects.create(comment=commentText, user=user, listing=listing)
             return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
 
         else:

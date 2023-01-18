@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'auctions',
+    'django.contrib.humanize',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -120,3 +121,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Numbers separated by comma
+# https://docs.djangoproject.com/en/4.0/topics/i18n/formatting/
+
+# DECIMAL_SEPARATOR = ','
+USE_THOUSAND_SEPARATOR = True

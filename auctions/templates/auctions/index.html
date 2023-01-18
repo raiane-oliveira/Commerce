@@ -1,5 +1,7 @@
 {% extends "auctions/layout.html" %}
 
+{% load humanize %}
+
 {% block body %}
 
     <h2 class="pb-3">Active Listings</h2>
@@ -31,7 +33,6 @@
         {% empty %}
             <p class="lead">
                 No auction listings added yet.
-                <a href="{% url 'create_listing' %}">Click here to add</a>
             </p>
         {% endfor %}
     {% endif %}

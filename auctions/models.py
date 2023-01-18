@@ -8,7 +8,7 @@ class User(AbstractUser):
 
 
 class Categories(models.Model):
-    category = models.CharField(max_length=100, unique=True)
+    category = models.CharField(max_length=100, unique=True, blank=True, null=True)
 
     def __str__(self):
         return f"{self.category}"
@@ -23,7 +23,6 @@ class AuctionListing(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userListing")
 
     active = models.BooleanField(default=True)
-    watchlist = models.BooleanField(default=False)
     time = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -33,8 +32,17 @@ class AuctionListing(models.Model):
         ordering = [F("id").desc()]
 
 
+class Watchlist(models.Model):
+    watchlist = models.BooleanField(default=False)
+    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="watchlist")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userWatchlist")
+
+    def __str__(self):
+        return f"{self.user}: {self.listing.title} - {self.watchlist}"
+
+
 class Bids(models.Model):
-    bid = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
+    bid = models.DecimalField(max_digits=100, decimal_places=2)
     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="bids")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userBids")
 
@@ -44,8 +52,8 @@ class Bids(models.Model):
 
 class Comments(models.Model):
     comment = models.TextField(blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="users")
     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="comments")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="users")
     time = models.DateTimeField(auto_now=True)
 
     def __str__(self):
