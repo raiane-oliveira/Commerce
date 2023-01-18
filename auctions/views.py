@@ -17,8 +17,6 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 def index(request):
     listings = AuctionListing.objects.filter(active=True).all()
-
-    # listings.delete()
     return render(request, "auctions/index.html", {
         "listings": listings,
     })
@@ -255,7 +253,7 @@ def categoryPage(request, category):
 
     # Gets all active listings in that category
     category_id = Categories.objects.get(category=category)
-    listings = list(AuctionListing.objects.filter(category=category_id.id).all())
+    listings = list(AuctionListing.objects.filter(category=category_id.id, active=True).all())
 
     return render(request, "auctions/categoryPage.html", {
         "listings": listings,
