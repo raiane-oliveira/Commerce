@@ -9,6 +9,7 @@ from django.db.models import Max
 from .models import *
 from .forms import *
 
+
 def index(request):
     listings = AuctionListing.objects.filter(active=True).all()
     return render(request, "auctions/index.html", {
@@ -86,8 +87,11 @@ def create_listing(request):
             category = form.cleaned_data["category"].strip().capitalize()
 
             if category:
+
+                # Turn query set into pure python list
                 categories = list(Categories.objects.all().values_list("category", flat=True))
 
+                # Creates a category if it doesn't exist or gets what already exists
                 if category not in categories:
                     category = Categories.objects.create(category=category)
                 else:
@@ -109,6 +113,7 @@ def create_listing(request):
             # Adds starting bid to track all other bids
             bid = Bids.objects.create(bid=startBid, listing=newListing, user=user)
 
+            # Creates a watchlist for the listing
             watchlist = Watchlist.objects.create(listing=newListing, user=user)
 
             return HttpResponseRedirect(reverse("index"))
@@ -131,7 +136,7 @@ def listings(request, listing_id):
     listing = AuctionListing.objects.get(id=listing_id)
     comments = listing.comments.all()
 
-    # Checks if there is a watchlist for the listing, otherwise creates one
+    # Checks if there is a watchlist for the user, otherwise creates one
     try:
         watchlist = Watchlist.objects.get(listing=listing, user=request.user.id)
     except:
@@ -212,6 +217,8 @@ def closeAuction(request, listing_id):
 @login_required(login_url='login')
 def watchlist(request):
     user = User.objects.get(id=request.user.id)
+
+    # Add or remove watchlist listing
     if request.method == "POST":
 
         # Gets data from form
@@ -219,7 +226,6 @@ def watchlist(request):
         choiceUser = request.POST["watchlist"]
 
         listing = AuctionListing.objects.get(id=listing_id)
-
         if choiceUser == "add":
             Watchlist.objects.filter(listing=listing, user=user).update(watchlist=True)
         else:
@@ -227,8 +233,8 @@ def watchlist(request):
             
         return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
 
-    # listings = Watchlist.objects.filter(watchlist=True, user=request.user.id).all()
-    listings = user.userWatchlist.all()
+    # Renders all listings in watchlist
+    listings = user.userWatchlist.filter(watchlist=True)
     return render(request, "auctions/watchlist.html", {
         "listings": listings
     })
@@ -237,8 +243,15 @@ def watchlist(request):
 @login_required(login_url='login')
 def categories(request):
     categories = Categories.objects.all()
+    categories_list = []
+    
+    # Select only the categories with listing active
+    for category in categories:
+        if category.listing.filter(active=True).all():
+            categories_list.append(category)
+
     return render(request, 'auctions/categories.html', {
-        "categories": categories,
+        "categories": categories_list,
     })
 
 
@@ -257,6 +270,8 @@ def categoryPage(request, category):
 
 @login_required(login_url="login")
 def comments(request, listing_id):
+
+    # Add comments on listing
     if request.method == "POST":
         form = FormComments(request.POST)
 
@@ -268,7 +283,7 @@ def comments(request, listing_id):
             listing = AuctionListing.objects.get(id=listing_id)
 
             # Add comment to model django
-            newComment = Comments.objects.create(comment=commentText, user=user, listing=listing)
+            Comments.objects.create(comment=commentText, user=user, listing=listing)
             return HttpResponseRedirect(reverse("listings", args=(listing_id,)))
 
         else:
@@ -276,14 +291,4 @@ def comments(request, listing_id):
                 "formComments": form
             })
 
-    else:
-        return HttpResponseRedirect(reverse("index"))
-
-
-
-def isNumber(value):
-    try:
-        float(value)
-    except ValueError:
-        return False
-    return True
+    return HttpResponseRedirect(reverse("index"))

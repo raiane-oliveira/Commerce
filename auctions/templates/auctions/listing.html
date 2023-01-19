@@ -28,8 +28,8 @@
                 <img class="img-fluid w-100 h-100" src="{{ listing.imageURL }}" alt="{{ listing.title }} Image" style="object-fit: contain;">
             </div>
         {% endif %}
-        <p class="lead mt-2">{{ listing.description }}</p>
 
+        <p class="lead mt-2">{{ listing.description }}</p>
         <h3 class="mb-3"><span>$</span>
             {{ listing.bid }}
         </h3>
@@ -114,7 +114,7 @@
             </form>
         {% endif %}
 
-        {% if watchlist.watchlist != True %}
+        {% if not watchlist.watchlist %}
             <form action="{% url 'watchlist' %}" method="post" class="ml-1">
                 {% csrf_token %}
                 <input type="hidden" name="watchlist" value="add">
